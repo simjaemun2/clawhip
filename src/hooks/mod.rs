@@ -75,11 +75,20 @@ fn ensure_supported_install_scope(args: &HooksInstallArgs) -> Result<()> {
 
 fn resolve_install_root(args: &HooksInstallArgs) -> Result<PathBuf> {
     match args.scope {
-        HookInstallScope::Project => Ok(args
-            .root
-            .clone()
-            .unwrap_or(std::env::current_dir()?)
-            .canonicalize()?),
+        HookInstallScope::Project => {
+            let includes_claude = args.all
+                || args.provider.is_empty()
+                || args.provider.contains(&HookProvider::ClaudeCode);
+            if includes_claude {
+                Ok(args
+                    .root
+                    .clone()
+                    .unwrap_or(std::env::current_dir()?)
+                    .canonicalize()?)
+            } else {
+                home_dir()
+            }
+        }
         HookInstallScope::Global => home_dir(),
     }
 }
